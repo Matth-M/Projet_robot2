@@ -8,7 +8,7 @@
 unsigned char adresse_telecommande_lecture=0xA2;
 
 
-int seuil_batterie=256; //seuil_batterie de la batterie a  10V, correspondant a 5V apres le pont diviseur de tension, avec Q=2^8*(5/5)
+int seuil_batterie=169; //seuil_batterie de la batterie a  10V, correspondant a 5V apres le pont diviseur de tension, avec Q=2^8*(3.3/5)
 
 
 unsigned char message_recu[3];
@@ -215,8 +215,8 @@ void arret(void){
 }
 
 void marche(void){
-    CCPR1L=48;                            //choix du rapport cyclique a 20% sur CCP1
-    CCP1CONbits.DC1B0=0;
+    CCPR1L=51;                            //choix du rapport cyclique a 20% sur CCP1 : 20% de 2^8
+    CCP1CONbits.DC1B0=0; //on n'utilise pas les 2 derniers bits, résolution bloquée à 8bits
     CCP1CONbits.DC1B1=0;
     printf ("mise en marche moteur \n\r");
 

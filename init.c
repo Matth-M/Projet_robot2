@@ -78,9 +78,9 @@ void init(void){
 
 
     T2CONbits.T2CKPS1=1;                 //Prescaler a 16
-    T2CONbits.T2CKPS0=1;
+    T2CONbits.T2CKPS0=1;                //Prescalermin = fOSC / [ (PR2 +1) * 4 * fPWM ] AN : Prescalermin = 8.1
 
-    T2CONbits.TOUTPS0=0;                 //postacler x1 par rapport au pwm
+    T2CONbits.TOUTPS0=0;                 //postscaler x1 par rapport au pwm
     T2CONbits.TOUTPS1=0;
     T2CONbits.TOUTPS2=0;
     T2CONbits.TOUTPS3=0;
