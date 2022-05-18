@@ -18,7 +18,7 @@ int flag_bouton_central=0;
 int flag_apres_tourne=0;
 int flag_bat_faible=0;
 int flag_tourne=0;
-int seuil_distance=77;
+int seuil_distance=102;//Q=2^8*(2/5)
 int tps_pour_acquerir=20;
 unsigned char adresse_pcf=0x40;
 

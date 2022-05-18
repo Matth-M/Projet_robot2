@@ -8,7 +8,7 @@
 unsigned char adresse_telecommande_lecture=0xA2;
 
 
-int seuil_batterie=154; //seuil_batterie de la batterie Ã  10V
+int seuil_batterie=256; //seuil_batterie de la batterie a  10V, correspondant a 5V apres le pont diviseur de tension, avec Q=2^8*(5/5)
 
 
 unsigned char message_recu[3];
@@ -59,12 +59,12 @@ void surveillance_batterie(void){
         if (moyenne<seuil_batterie){  //definir le seuil_batterie.
             flag_bat_faible=1;
             printf("batterie faible, valeur de la moyenne : %d\n\r", moyenne);
-            PORTBbits.RB5 = 1;
+            PORTBbits.RB5 = 1;// led s'allume lorsque batterie faible
         }
         else {
             printf("batterie ok, valeur de la moyenne : %d\n\r", moyenne);
             flag_bat_faible=0;
-            PORTBbits.RB5 = 0;
+            PORTBbits.RB5 = 0;// led eteinte lorsque batterie pas faible
         }
     }
     else{
@@ -96,11 +96,11 @@ void acquisition_capteur(void){
     ADCON0bits.CHS3=0;
 
     ADCON0bits.GO = 1;
-    while(PIR1bits.ADIF !=1){}
+    while(PIR1bits.ADIF !=1){}// tant que conversion pas finie, reste dans la boucle vide
 
     distance_capteur_droit=ADRESH;
     ADRESH=0;
-    PIR1bits.ADIF=0;
+    PIR1bits.ADIF=0;// reset le bit pour le prochain passage
 
 
     ADCON0bits.CHS0=1;                  //selection de la voix analogique 1
@@ -113,7 +113,7 @@ void acquisition_capteur(void){
 
     distance_capteur_gauche=ADRESH;
     ADRESH=0;
-    PIR1bits.ADIF=0;
+    PIR1bits.ADIF=0; // reset le bit pour le prochain passage
     printf("capteur gauche: %d //capteur droit : %d \n\r",distance_capteur_gauche,distance_capteur_droit);
 }
 
@@ -124,7 +124,7 @@ void acquisition_capteur(void){
 */
 void telecommande(void){
     if(Detecte_i2c(adresse_telecommande_lecture)!=0){
-        printf("erreur la telecommande n'est pas detecter par l'I2C\n\r");
+        printf("erreur la telecommande n'est pas detectee par l'I2C\n\r");
     }
     else{
         Lire_i2c_Telecom(adresse_telecommande_lecture, message_recu);
@@ -173,16 +173,16 @@ void telecommande(void){
 
 void deplacement_autonome(void){
     if(flag_apres_tourne){
-        if (tps_avance>=temps_un_metre){
-                arret();
-                PORTBbits.RB1 = 1;
+        if (tps_avance>=temps_un_metre){ // Si on a parcouru 1m ou plus
+                arret();//on sarrete
+                PORTBbits.RB1 = 1; // on ne lit plus l'input
                 printf("fin des capteur\n\r");
                 flag_bouton_central=0;
 
 
         }
         else{
-       // printf("avance sans obstacle\n\r");
+        printf("avance sans obstacle\n\r");
         }
     }
     if(distance_capteur_droit>=seuil_distance || distance_capteur_gauche>=seuil_distance){
@@ -191,7 +191,6 @@ void deplacement_autonome(void){
                 tourne();
                 arret();
                 
-                PORTAbits.RA6=~PORTAbits.RA6;
                 tps_avance=0;
                 if(flag_bouton_central){  //si arret par la telecommande pendant qu'il tourne
                 flag_apres_tourne=1;
@@ -229,7 +228,7 @@ void marche(void){
 void tourne(void){
     flag_tourne=1;
     printf("tourne\n\r");
-    PORTAbits.RA6=~PORTAbits.RA6;
+    PORTAbits.RA6=~PORTAbits.RA6; // roue droite change de sens de rotation
 
     CCPR2L=30;                              //choix du rapport cyclique a 10%
     CCP2CONbits.DC2B0=0;
@@ -239,7 +238,9 @@ void tourne(void){
     CCP1CONbits.DC1B1=0;
     while(compteur_tourner<tps_tourner && flag_tourne){ }
     flag_tourne=0;
+
     compteur_tourner=0;
+    PORTAbits.RA6=~PORTAbits.RA6;
 
 
 }
