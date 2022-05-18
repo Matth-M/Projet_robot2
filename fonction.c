@@ -8,7 +8,7 @@
 unsigned char adresse_telecommande_lecture=0xA2;
 
 
-int seuil_batterie=154; //seuil_batterie de la batterie ‡ 10V
+int seuil_batterie=154; //seuil_batterie de la batterie √† 10V
 
 
 unsigned char message_recu[3];
@@ -40,23 +40,23 @@ void surveillance_batterie(void){
     ADCON0bits.CHS3=0;
 
 
-    ADCON0bits.GO = 1;
-    while(PIR1bits.ADIF !=1){}
-    Ubat[k]=ADRESH;
-    PIR1bits.ADIF=0;
+    ADCON0bits.GO = 1; //if =1 : conversion en cours
+    while(PIR1bits.ADIF !=1){}  // tant que conversion pas finie, reste dans la boucle vide
+    Ubat[k]=ADRESH; // R√©cup√®re la valeur en sortie de l'ADC
+    PIR1bits.ADIF=0; // reset le bit pour le prochain passage
 
-    if(k==7 && !flag_moyenne){
+    if(k==7 && !flag_moyenne){ //permet de commencer la mesure 800ms apr√®s le d√©marrage
         flag_moyenne=~flag_moyenne;
     }
 
     if(flag_moyenne){
         for(i;i<8;i++){
-            moyenne+=Ubat[k];
+            moyenne+=Ubat[k]; //on incr√©mente la moyenne
         }
-        moyenne=moyenne/8;
+        moyenne=moyenne/8; //On effectue la moyenne
         i=0;
 
-        if (moyenne<seuil_batterie){  //dÈfinir le seuil_batterie.
+        if (moyenne<seuil_batterie){  //definir le seuil_batterie.
             flag_bat_faible=1;
             printf("batterie faible, valeur de la moyenne : %d\n\r", moyenne);
             PORTBbits.RB5 = 1;
@@ -68,7 +68,7 @@ void surveillance_batterie(void){
         }
     }
     else{
-        printf("pas assez de valeurs pour faire la moyenne flottante, derniËre valeur de Ubat=%d ",Ubat[k]);
+        printf("pas assez de valeurs pour faire la moyenne flottante, derniÔøΩre valeur de Ubat=%d ",Ubat[k]);
         if (Ubat[k]<seuil_batterie){
             flag_bat_faible=1;
             printf("batterie faible \n\r");
@@ -154,7 +154,7 @@ void telecommande(void){
             else{
 
                 arret();
-                PORTBbits.RB1 =1; // Èteint les capteurs
+                PORTBbits.RB1 =1; // ÔøΩteint les capteurs
                 printf("fin des capteurs\n\r");
                 flag_apres_tourne=0;
                 tps_avance=0;
@@ -212,7 +212,7 @@ void arret(void){
     CCPR2L=0;                            //choix du rapport cyclique a 0 sur CCP1
     CCP2CONbits.DC2B0=0;
     CCP2CONbits.DC2B1=0;
-    printf ("arrÍt \n\r");
+    printf ("arrÔøΩt \n\r");
 }
 
 void marche(void){

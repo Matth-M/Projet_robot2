@@ -1,8 +1,8 @@
 /* 
  * File:   fonction.h
- * Author: rossi
+ * Author: Pierre
  *
- * Created on 27 mai 2021, 08:43
+ * Created on 10 mai 2022, 08:47
  */
 
 #ifndef FONCTION_H
