@@ -19,7 +19,7 @@ int flag_moyenne=0;
 
 
 int temps_un_metre=21;      //supposition du temps pour avancer d'un metre
-int tps_tourner=15;         //supposition du temps pour tourner
+int tps_tourner=12;         //supposition du temps pour tourner
 
 
 
@@ -215,12 +215,12 @@ void arret(void){
 }
 
 void marche(void){
-    CCPR1L=51;                            //choix du rapport cyclique a 20% sur CCP1 : 20% de 2^8
+    CCPR1L=53;                            //choix du rapport cyclique a 20% sur CCP1 : 20% de 2^8 moteur gauche
     CCP1CONbits.DC1B0=0; //on n'utilise pas les 2 derniers bits, résolution bloquée à 8bits
     CCP1CONbits.DC1B1=0;
     printf ("mise en marche moteur \n\r");
 
-    CCPR2L=50;                            //choix du rapport cyclique a 20% sur CCP2
+    CCPR2L=63;                            //choix du rapport cyclique a 20% sur CCP2 Moteur droit
     CCP2CONbits.DC2B0=0;
     CCP2CONbits.DC2B1=0;
 }

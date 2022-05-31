@@ -71,7 +71,7 @@ void init(void){
     TRISAbits.RA6=0;
     PORTAbits.RA6=1;
     PORTAbits.RA7=1;
-    PORTBbits.RB1=1;
+    PORTBbits.RB1=0;
     /*-----------------------------
         init timer 2 1kHz
     ----------------------------*/
