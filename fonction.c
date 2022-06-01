@@ -5,105 +5,105 @@
 #include "fonction.h"
 
 
-unsigned char adresse_telecommande_lecture=0xA2;
+unsigned char telecommande_adresse=0xA2;
 
 
-int seuil_batterie=169; //seuil_batterie de la batterie a� 10V, correspondant a 5V apres le pont diviseur de tension, avec Q=2^8*(3.3/5)
 
 
-unsigned char message_recu[3];
+unsigned char received_message[3];
 int Ubat[8];
-
+int bat_seuil=169; //bat_seuil de la batterie a 10V, correspondant a 5V apres le pont diviseur de tension, avec Q=2^8*(3.3/5)
+int moy_f=0;
 int k=0;
-int flag_moyenne=0;
 
-
-int temps_un_metre=21;      //supposition du temps pour avancer d'un metre
-int tps_tourner=12;         //supposition du temps pour tourner
-
+int turn_time=12;         //supposition du temps pour tourner
+int metre_time=21;      //supposition du temps pour avancer d'un metre
 
 
 
 
 /*
-----------------------------batterie-------------------------------------------
+---------------------------Partie Batterie-------------------------------------------
 */
 
 void surveillance_batterie(void){
 
-    int moyenne;
+    int moy;
     int i=0;
 
-    ADCON0bits.CHS0=0;                  //selection de la voix analogique 2
+//Nous sélectionnons la voix analogique 2
+    ADCON0bits.CHS0=0;                  
     ADCON0bits.CHS1=1;
     ADCON0bits.CHS2=0;
     ADCON0bits.CHS3=0;
 
-
-    ADCON0bits.GO = 1; //if =1 : conversion en cours
+//si ce bit vaut 1 : la conversion est en cours
+    ADCON0bits.GO = 1; 
     while(PIR1bits.ADIF !=1){}  // tant que conversion pas finie, reste dans la boucle vide
     Ubat[k]=ADRESH; // Récupère la valeur en sortie de l'ADC
     PIR1bits.ADIF=0; // reset le bit pour le prochain passage
 
-    if(k==7 && !flag_moyenne){ //permet de commencer la mesure 800ms après le démarrage
-        flag_moyenne=~flag_moyenne;
+//permet de commencer la mesure 800ms après le démarrage
+    if(k==7 && !moy_f){ 
+        moy_f=~moy_f;
     }
 
-    if(flag_moyenne){
+    if(moy_f){
+        // On mesure 8 valeurs différentes
         for(i;i<8;i++){
-            moyenne+=Ubat[k]; //on incrémente la moyenne
+            moy+=Ubat[k]; //on incrémente la moyenne
         }
-        moyenne=moyenne/8; //On effectue la moyenne
+        moy=moy/8; //On effectue la moyenne
         i=0;
 
-        if (moyenne<seuil_batterie){  //definir le seuil_batterie.
-            flag_bat_faible=1;
-            printf("batterie faible, valeur de la moyenne : %d\n\r", moyenne);
-            PORTBbits.RB5 = 1;// led s'allume lorsque batterie faible
+//Si la moyenne est trop basse
+        if (moy<bat_seuil){  
+            printf("la batterie est faible, sa moyenne est de: %d\n\r", moy);
+            PORTBbits.RB5 = 1;// LED s'allume lorsque batterie faible
         }
         else {
-            printf("batterie ok, valeur de la moyenne : %d\n\r", moyenne);
-            flag_bat_faible=0;
-            PORTBbits.RB5 = 0;// led eteinte lorsque batterie pas faible
+            printf("La batterie est assez chargée, sa moyenne est de : %d\n\r", moy);
+            PORTBbits.RB5 = 0;// LED eteinte quand la batterie n'est pas faible
         }
     }
     else{
-        printf("pas assez de valeurs pour faire la moyenne flottante, derni�re valeur de Ubat=%d ",Ubat[k]);
-        if (Ubat[k]<seuil_batterie){
-            flag_bat_faible=1;
-            printf("batterie faible \n\r");
+        printf("pas assez de valeurs pour faire la moyenne flottante, derniere valeur de Ubat=%d ",Ubat[k]);
+        if (Ubat[k]<bat_seuil){
+            printf("La Batterie est faible (moyenne pas encore disponible) \n\r");
             PORTBbits.RB5 = 1;
         }
         else {
-            printf("batterie ok \n\r");
-            flag_bat_faible=0;
+            printf("La batterie est assez chargée (moyenne pas encore disponible)\n\r");
             PORTBbits.RB5 = 0;
         }
     }
+    //Incrémentation de k et modulo
     k++;
     k=k%8;
 }
 
 
 /*
--------------------------fonction capteur------------------------------------
+-------------------------Partie Capteur------------------------------------
 */
 void acquisition_capteur(void){
     ADRESH=0;
-    ADCON0bits.CHS0=0;                  //selection de la voix analogique 0
+//Nous selectionnons la voix analogique 0
+    ADCON0bits.CHS0=0;                 
     ADCON0bits.CHS1=0;
     ADCON0bits.CHS2=0;
     ADCON0bits.CHS3=0;
 
     ADCON0bits.GO = 1;
-    while(PIR1bits.ADIF !=1){}// tant que conversion pas finie, reste dans la boucle vide
-
+    while(PIR1bits.ADIF !=1){} // Tant que conversion pas finie, reste dans la boucle vide
+//On récupère la valeur renvoyée par l'ADC
     distance_capteur_droit=ADRESH;
     ADRESH=0;
     PIR1bits.ADIF=0;// reset le bit pour le prochain passage
 
+//Nous selectionnons la voix analogique 1
 
-    ADCON0bits.CHS0=1;                  //selection de la voix analogique 1
+    ADCON0bits.CHS0=1;                 
     ADCON0bits.CHS1=0;
     ADCON0bits.CHS2=0;
     ADCON0bits.CHS3=0;
@@ -114,30 +114,33 @@ void acquisition_capteur(void){
     distance_capteur_gauche=ADRESH;
     ADRESH=0;
     PIR1bits.ADIF=0; // reset le bit pour le prochain passage
-    printf("capteur gauche: %d //capteur droit : %d \n\r",distance_capteur_gauche,distance_capteur_droit);
+    printf("Valeur capteur gauche: %d \nValeur capteur droit : %d \n\r",distance_capteur_gauche,distance_capteur_droit);
 }
 
 
 
 /*
-----------------------------telecommande-------------------------------------------
+----------------------------Partie Telecommande-------------------------------------------
 */
 void telecommande(void){
-    if(Detecte_i2c(adresse_telecommande_lecture)!=0){
-        printf("erreur la telecommande n'est pas detectee par l'I2C\n\r");
+    if(Detecte_i2c(telecommande_adresse)!=0){
+        printf("Telecommande non detectee par l'I2C\n\r");
     }
     else{
-        Lire_i2c_Telecom(adresse_telecommande_lecture, message_recu);
-        printf("message recu par la telecommande : %s\n\r",message_recu);
+        Lire_i2c_Telecom(telecommande_adresse, received_message);
+        printf("Message recu : %s\n\r",received_message);
 
         if(Detecte_i2c(adresse_pcf)!=0){
-        printf("erreur le pcf n'est pas detecter par l'I2C\n\r");
+        printf("PCF non detecte par l'I2C\n\r");
         }
         else{
-            Write_PCF8574(adresse_pcf, message_recu[1] );
+            Write_PCF8574(adresse_pcf, received_message[1] );
         }
-        if(message_recu[1]=='3')
+
+        //Si bouton central appuyé
+        if(received_message[1]=='3')
         {
+            // flag permettant de savoir si le bouton central a été poussé
             flag_bouton_central= ~flag_bouton_central;
 
             if(flag_bouton_central){
@@ -173,7 +176,7 @@ void telecommande(void){
 
 void deplacement_autonome(void){
     if(flag_apres_tourne){
-        if (tps_avance>=temps_un_metre){ // Si on a parcouru 1m ou plus
+        if (tps_avance>=metre_time){ // Si on a parcouru 1m ou plus
                 arret();//on sarrete
                 PORTBbits.RB1 = 1; // on ne lit plus l'input
                 printf("fin des capteur\n\r");
@@ -216,7 +219,7 @@ void arret(void){
 
 void marche(void){
     CCPR1L=53;                            //choix du rapport cyclique a 20% sur CCP1 : 20% de 2^8 moteur gauche
-    CCP1CONbits.DC1B0=0; //on n'utilise pas les 2 derniers bits, r�solution bloqu�e � 8bits
+    CCP1CONbits.DC1B0=0; //on n'utilise pas les 2 derniers bits, r�solution bloqu�e � 8bits
     CCP1CONbits.DC1B1=0;
     printf ("mise en marche moteur \n\r");
 
@@ -236,7 +239,7 @@ void tourne(void){
     CCPR1L=30;
     CCP1CONbits.DC1B0=0;
     CCP1CONbits.DC1B1=0;
-    while(compteur_tourner<tps_tourner && flag_tourne){ }
+    while(compteur_tourner<turn_time && flag_tourne){ }
     flag_tourne=0;
 
     compteur_tourner=0;
